@@ -1,0 +1,234 @@
+# This file tells GitHub Pages not to use Jekyll processing
+# Since we're serving static files (HTML, CSS, JS), we don't need Jekyll
+#
+# Customized for: Simple Calculator App (Progressive Web App)
+#
+# Purpose:
+# - Keep GitHub Pages from using Jekyll processing (original functionality preserved).
+# - Provide bundled reference artifacts and example code snippets to convert the
+#   Simple Calculator App into a PWA: manifest.json, service-worker.js, meta/link
+#   tags, recommended icons, caching strategy, and small accessibility tips.
+#
+# Instructions:
+# - The presence of this file alone disables Jekyll. The text below is informational
+#   and includes ready-to-copy samples for the PWA components. Put the respective
+#   code blocks into the files named (manifest.json, service-worker.js, index.html, etc.)
+#   in your repo root (or adjust paths) to enable PWA behavior on GitHub Pages.
+#
+# ---------------------------------------------------------------------
+# 1) manifest.json (save as manifest.json in your site root)
+#
+# {
+#   "name": "Simple Calculator App",
+#   "short_name": "Calculator",
+#   "description": "A lightweight, offline-capable simple calculator: add, subtract, multiply, divide, memory and clear. Keyboard and touch friendly.",
+#   "start_url": "/?source=pwa",
+#   "display": "standalone",
+#   "orientation": "portrait",
+#   "background_color": "#0f172a",
+#   "theme_color": "#3b82f6",
+#   "icons": [
+#     {
+#       "src": "/icons/icon-192.png",
+#       "sizes": "192x192",
+#       "type": "image/png",
+#       "purpose": "any maskable"
+#     },
+#     {
+#       "src": "/icons/icon-512.png",
+#       "sizes": "512x512",
+#       "type": "image/png",
+#       "purpose": "any maskable"
+#     }
+#   ]
+# }
+#
+# Notes:
+# - Make icons with both 192x192 and 512x512. Use maskable icon support for adaptive displays.
+# - theme_color should match a dominant color from your app UI (header/status bar).
+#
+# ---------------------------------------------------------------------
+# 2) service-worker.js (save as service-worker.js in your site root)
+#
+# // Simple service worker optimized for a small calculator app
+# const CACHE_NAME = 'simple-calc-cache-v1';
+# const ASSETS = [
+#   '/',
+#   '/index.html',
+#   '/styles.css',
+#   '/app.js',
+#   '/manifest.json',
+#   '/icons/icon-192.png',
+#   '/icons/icon-512.png'
+# ];
+#
+# self.addEventListener('install', event => {
+#   self.skipWaiting();
+#   event.waitUntil(
+#     caches.open(CACHE_NAME)
+#       .then(cache => cache.addAll(ASSETS))
+#   );
+# });
+#
+# self.addEventListener('activate', event => {
+#   event.waitUntil(
+#     caches.keys().then(keys => Promise.all(
+#       keys.filter(key => key !== CACHE_NAME)
+#           .map(key => caches.delete(key))
+#     ))
+#   );
+#   self.clients.claim();
+# });
+#
+# // Cache-first strategy for core assets (calculator is fully client-side)
+# self.addEventListener('fetch', event => {
+#   const url = new URL(event.request.url);
+#   // Only handle same-origin GET requests
+#   if (event.request.method !== 'GET' || url.origin !== location.origin) return;
+#
+#   event.respondWith(
+#     caches.match(event.request)
+#       .then(cached => {
+#         if (cached) return cached;
+#         return fetch(event.request)
+#           .then(response => {
+#             // Optionally cache new requests (thin app; keep it simple)
+#             if (response && response.status === 200) {
+#               const clone = response.clone();
+#               caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+#             }
+#             return response;
+#           })
+#           .catch(() => {
+#             // Fallback: for navigation requests show cached index.html
+#             if (event.request.mode === 'navigate') {
+#               return caches.match('/index.html');
+#             }
+#           });
+#       })
+#   );
+# });
+#
+# ---------------------------------------------------------------------
+# 3) index.html snippets (add into your <head> and before closing </body>)
+#
+# <!-- In <head> -->
+# <meta name="theme-color" content="#3b82f6">
+# <link rel="manifest" href="/manifest.json">
+# <link rel="icon" href="/icons/icon-192.png">
+# <link rel="apple-touch-icon" href="/icons/icon-192.png">
+# <meta name="apple-mobile-web-app-capable" content="yes">
+# <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+#
+# <!-- Before closing </body> -->
+# <script>
+#   // Register the service worker
+#   if ('serviceWorker' in navigator) {
+#     navigator.serviceWorker.register('/service-worker.js')
+#       .then(reg => console.log('Service Worker registered', reg))
+#       .catch(err => console.warn('SW registration failed', err));
+#   }
+#
+#   // Prompt install (optional): show a custom "Install" button when available
+#   let deferredPrompt;
+#   window.addEventListener('beforeinstallprompt', (e) => {
+#     e.preventDefault();
+#     deferredPrompt = e; // Save the event for a later user gesture
+#     // Show your install button here (e.g., document.getElementById('install-btn').style.display = 'block')
+#   });
+#   // Example install handler:
+#   // document.getElementById('install-btn').addEventListener('click', async () => {
+#   //   if (!deferredPrompt) return;
+#   //   deferredPrompt.prompt();
+#   //   const choice = await deferredPrompt.userChoice;
+#   //   deferredPrompt = null;
+#   // });
+# </script>
+#
+# ---------------------------------------------------------------------
+# 4) Styling notes (styles.css suggestions)
+#
+# - Use a clean, high-contrast dark or light theme. Example:
+#   body { background: #0b1220; color: #e6eef8; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+# - Calculator layout:
+#   .display { font-size: 2rem; padding: 1rem; text-align: right; background: rgba(255,255,255,0.03); border-radius: 8px; }
+#   .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+#   .key { padding: 1rem; border-radius: 8px; background: rgba(255,255,255,0.02); text-align: center; font-size: 1.25rem; user-select: none; }
+#   .key:active { transform: translateY(1px); }
+# - Ensure focus outlines for keyboard accessibility:
+#   .key:focus { outline: 2px solid rgba(59,130,246,0.7); }
+#
+# ---------------------------------------------------------------------
+# 5) Feature suggestions to match "Simple Calculator App"
+#
+# - Core:
+#   * Basic arithmetic: +, -, ×, ÷
+#   * Decimal support, +/- toggle, percent
+#   * Clear (C), All Clear (AC), backspace
+#   * Memory buttons: M+, M-, MR, MC
+#
+# - PWA-related:
+#   * Offline first: service-worker caches main assets so the calculator always loads.
+#   * Installable: manifest.json + beforeinstallprompt allows the app to be installed to home screen.
+#   * Fast cold start: keep JS minimal and cache it.
+#
+# - Accessibility:
+#   * Keyboard support: numeric keys, Enter for equals, Backspace for delete, Escape for clear.
+#   * ARIA labels on buttons and live region for the display.
+#
+# - Small UX touches:
+#   * Long-press on AC for "clear memory" or similar.
+#   * Haptic/tactile feedback via small CSS/JS animation on key press.
+#   * Theme toggle (light/dark) persisted to localStorage.
+#
+# ---------------------------------------------------------------------
+# 6) Example app.js minimal behavior (save as app.js)
+#
+# // Very small example to wire keyboard keys and basic calculation parsing:
+# // Note: For production prefer a safe expression parser; this is illustrative.
+# document.addEventListener('DOMContentLoaded', () => {
+#   const display = document.getElementById('display');
+#   const keys = document.querySelectorAll('.key');
+#   keys.forEach(k => k.addEventListener('click', () => handleInput(k.dataset.value)));
+#
+#   document.addEventListener('keydown', (e) => {
+#     const key = e.key;
+#     if ((/^[0-9.]$/).test(key)) handleInput(key);
+#     else if (key === 'Enter') handleInput('=');
+#     else if (key === 'Backspace') handleInput('back');
+#     else if (key === 'Escape') handleInput('ac');
+#     else if (key === '+-') handleInput('+/-');
+#     else if (['+', '-', '*', '/'].includes(key)) handleInput(key);
+#   });
+#
+#   function handleInput(val) {
+#     // Implement append, evaluate, clear, backspace, memory, etc.
+#     console.log('Input:', val);
+#     // Example evaluation (dangerous for arbitrary input): using Function for brevity
+#     if (val === '=') {
+#       try {
+#         // Replace ×, ÷ with JS operators if your UI uses them
+#         const result = Function('"use strict";return (' + display.textContent.replace(/×/g,'*').replace(/÷/g,'/') + ')')();
+#         display.textContent = String(result);
+#       } catch (e) { display.textContent = 'Error'; }
+#     }
+#   }
+# });
+#
+# ---------------------------------------------------------------------
+# 7) Deployment checklist
+#
+# - Add manifest.json and service-worker.js to repo root.
+# - Ensure icons are placed at /icons/icon-192.png and /icons/icon-512.png.
+# - Link manifest and meta tags in index.html (see above).
+# - Register the service worker from your main JS.
+# - Test offline by disabling network in browser devtools and reloading.
+# - Test install flow on Android/Chromium browsers and PWABuilder or Lighthouse.
+#
+# ---------------------------------------------------------------------
+# This .nojekyll file remains a marker for GitHub Pages; nothing here will be
+# processed by Jekyll. Use the snippets above to convert your Simple Calculator
+# App into an installable, offline-capable PWA while keeping structure and
+# functionality intact.
+#
+# Enjoy building the Simple Calculator App PWA!

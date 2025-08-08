@@ -1,0 +1,238 @@
+/* Custom styles for your PWA: Simple Calculator App */
+/* Tailwind CSS is loaded via CDN, so you can use utility classes */
+
+/* Theme variables for light/dark modes */
+:root {
+    --bg: #f8fafc;            /* slate-50 */
+    --card-bg: #ffffff;       /* white */
+    --muted: #64748b;         /* slate-500 */
+    --accent: #2563eb;        /* blue-600 */
+    --accent-600: #1d4ed8;    /* blue-700 */
+    --operator: #f97316;      /* orange-400 */
+    --operator-700: #ea580c;  /* orange-600 */
+    --success: #10b981;       /* emerald-500 */
+    --glass: rgba(255,255,255,0.6);
+    --shadow: 0 10px 30px rgba(2,6,23,0.08);
+    --radius: 16px;
+    --display-height: 92px;
+}
+
+body.dark-mode {
+    --bg: #0b1220;            /* near-black */
+    --card-bg: rgba(6,10,20,0.8);
+    --muted: #94a3b8;         /* slate-300 */
+    --accent: #60a5fa;        /* blue-400 */
+    --accent-600: #3b82f6;
+    --operator: #fb923c;
+    --operator-700: #f97316;
+    --success: #34d399;
+    --glass: rgba(255,255,255,0.04);
+    --shadow: 0 6px 20px rgba(2,6,23,0.6);
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.45s ease-out;
+}
+
+/* App container */
+.container {
+    @apply mx-auto mt-8;
+    max-width: 420px;
+    padding: 1rem;
+}
+
+/* Calculator card */
+.calculator {
+    background: linear-gradient(180deg, var(--card-bg), color-mix(in srgb, var(--card-bg) 85%, transparent));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 0.75rem;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Header */
+.calculator-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.app-title {
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: -0.2px;
+    @apply text-lg;
+}
+
+/* Light visual badge */
+.app-badge {
+    @apply text-xs px-2 py-1 rounded-full font-medium;
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent-600);
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Display area */
+.display {
+    height: var(--display-height);
+    border-radius: 12px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 92%, transparent), var(--glass));
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
+.calc-value {
+    @apply text-right font-mono;
+    font-size: 1.85rem;
+    color: color-mix(in srgb, var(--muted) 92%, black);
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* small secondary expression (history/current operation) */
+.calc-expression {
+    @apply text-right text-sm font-light;
+    color: color-mix(in srgb, var(--muted) 64%, transparent);
+}
+
+/* Button grid */
+.pad-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+}
+
+/* Base button */
+.btn {
+    @apply flex items-center justify-center select-none font-semibold rounded-lg transition-transform duration-120;
+    padding: 0.75rem;
+    min-height: 56px;
+    user-select: none;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(2,6,23,0.06);
+    transform: translateZ(0);
+}
+
+/* Primary (digit) button */
+.btn-primary {
+    @apply bg-white text-gray-800;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--card-bg) 95%, transparent), var(--glass));
+    color: color-mix(in srgb, var(--muted) 92%, black);
+    border: 1px solid color-mix(in srgb, var(--muted) 6%, transparent);
+}
+.btn-primary:active { transform: translateY(1px) scale(0.995); box-shadow: 0 3px 8px rgba(2,6,23,0.06); }
+
+/* Secondary (operator) button */
+.btn-secondary {
+    @apply text-white;
+    background: linear-gradient(180deg, var(--operator), var(--operator-700));
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--operator) 25%, transparent);
+}
+.btn-secondary:active { transform: translateY(1px) scale(0.995); }
+
+/* Clear and backspace */
+.btn-clear {
+    @apply bg-red-100 text-red-700 font-semibold;
+    background: linear-gradient(180deg, #fff5f5, #fee2e2);
+    border: 1px solid color-mix(in srgb, #ef4444 10%, transparent);
+}
+.btn-clear:active { transform: translateY(1px); }
+
+/* Equals button (prominent) */
+.btn-equal {
+    @apply text-white font-bold;
+    background: linear-gradient(180deg, var(--accent), var(--accent-600));
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--accent) 30%, transparent);
+    grid-column: span 2;
+    min-height: 56px;
+    border-radius: 12px;
+}
+.btn-equal:active { transform: translateY(2px) scale(0.998); }
+
+/* Toggle theme / small controls */
+.controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-toggle-theme {
+    @apply text-sm px-3 py-1 rounded-full border;
+    background: transparent;
+    color: var(--muted);
+    border-color: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+.btn-toggle-theme:active { transform: translateY(1px); }
+
+/* Accessibility focus */
+.btn:focus,
+.btn-toggle-theme:focus {
+    outline: 2px solid color-mix(in srgb, var(--accent) 24%, transparent);
+    outline-offset: 2px;
+}
+
+/* Special wide button for zero */
+.btn-zero {
+    grid-column: span 2;
+}
+
+/* Tiny helper text */
+.helper {
+    @apply text-xs text-gray-500;
+    color: color-mix(in srgb, var(--muted) 64%, transparent);
+}
+
+/* Support for keyboard hint at the bottom */
+.kb-hint {
+    @apply text-center text-xs;
+    color: color-mix(in srgb, var(--muted) 44%, transparent);
+    margin-top: 0.5rem;
+}
+
+/* Responsive tweaks - mobile-first */
+@media (max-width: 480px) {
+    .container { padding-left: 1rem; padding-right: 1rem; }
+    .calculator { padding: 0.75rem; }
+    .display { height: 84px; padding: 0.6rem 0.9rem; }
+    .calc-value { font-size: 1.5rem; }
+    .btn { min-height: 50px; padding: 0.6rem; }
+}
+
+/* Slightly larger layout for tablets */
+@media (min-width: 481px) and (max-width: 1024px) {
+    .container { max-width: 520px; }
+    .display { height: 108px; }
+    .calc-value { font-size: 2rem; }
+}
+
+/* Print-friendly: hide shadows and animations */
+@media print {
+    .calculator { box-shadow: none; background: #fff; -webkit-print-color-adjust: exact; }
+    .btn { box-shadow: none; }
+    .fade-in { animation: none; }
+}
+
+/* Small utility tweaks to preserve existing classes used elsewhere */
+.hidden { @apply hidden; }
+.visible { @apply block; }
+
+/* End of Simple Calculator App styles */

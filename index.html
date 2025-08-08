@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Simple Calculator App</title>
+    <meta name="theme-color" content="#0ea5a4" />
+    <meta name="description" content="A lightweight Progressive Web App — Simple Calculator for basic arithmetic, keyboard support, and Add to Home Screen." />
+    <link rel="manifest" href="manifest.json">
+    <link href="style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Minor overrides for consistent button sizing */
+      .calc-btn { @apply text-lg font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-300; }
+      .calc-display { @apply bg-gray-50 text-right rounded-md p-4 text-2xl font-semibold break-words; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-teal-50 to-white text-gray-900 min-h-screen flex items-center justify-center">
+    <div id="app" class="w-full max-w-md px-4 py-8">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-extrabold text-teal-700 flex items-center justify-center gap-2">
+                <span class="text-2xl">🧮</span> Simple Calculator
+            </h1>
+            <p class="text-sm text-gray-600 mt-2">Fast, offline-capable calculator with keyboard support and installable as a PWA.</p>
+        </header>
+
+        <main class="bg-white shadow-lg rounded-xl p-5">
+            <section class="mb-4">
+                <div id="display" class="calc-display" aria-live="polite" role="status">0</div>
+                <div id="subDisplay" class="mt-1 text-right text-xs text-gray-500 min-h-[1rem]"></div>
+            </section>
+
+            <section aria-label="Calculator buttons">
+                <div class="grid grid-cols-4 gap-3">
+                    <!-- Row 1 -->
+                    <button class="calc-btn bg-gray-100 text-gray-800 p-4 calc-action" data-action="clear" aria-label="All clear">AC</button>
+                    <button class="calc-btn bg-gray-100 text-gray-800 p-4 calc-action" data-action="neg" aria-label="Toggle sign">+/-</button>
+                    <button class="calc-btn bg-gray-100 text-gray-800 p-4 calc-action" data-action="percent" aria-label="Percent">%</button>
+                    <button class="calc-btn bg-teal-500 text-white p-4 calc-op" data-value="/" aria-label="Divide">÷</button>
+
+                    <!-- Row 2 -->
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="7">7</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="8">8</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="9">9</button>
+                    <button class="calc-btn bg-teal-500 text-white p-4 calc-op" data-value="*" aria-label="Multiply">×</button>
+
+                    <!-- Row 3 -->
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="4">4</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="5">5</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="6">6</button>
+                    <button class="calc-btn bg-teal-500 text-white p-4 calc-op" data-value="-" aria-label="Subtract">−</button>
+
+                    <!-- Row 4 -->
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="1">1</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="2">2</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="3">3</button>
+                    <button class="calc-btn bg-teal-500 text-white p-4 calc-op" data-value="+" aria-label="Add">+</button>
+
+                    <!-- Row 5 -->
+                    <button class="calc-btn col-span-2 bg-gray-50 text-gray-900 p-4 text-left" data-value="0" aria-label="Zero">0</button>
+                    <button class="calc-btn bg-gray-50 text-gray-900 p-4" data-value="." aria-label="Decimal">.</button>
+                    <button class="calc-btn bg-teal-600 text-white p-4 calc-equals" data-action="equals" aria-label="Equals">=</button>
+                </div>
+                <div class="mt-3 text-center text-xs text-gray-500">
+                    Tip: Use keyboard — numbers, + - * /, Enter =, Backspace to delete, Esc to clear.
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-4 text-center text-xs text-gray-500">
+            Offline ready • Small and simple
+        </footer>
+    </div>
+
+    <script>
+      (function () {
+        const displayEl = document.getElementById('display');
+        const subDisplayEl = document.getElementById('subDisplay');
+        const buttons = document.querySelectorAll('[data-value], .calc-action, .calc-equals');
+        let expr = '';      // current expression shown in subDisplay
+        let justEvaluated = false;
+
+        function setDisplay(value) {
+          displayEl.textContent = value;
+        }
+        function setSubDisplay(value) {
+          subDisplayEl.textContent = value;
+        }
+
+        function resetAll() {
+          expr = '';
+          setDisplay('0');
+          setSubDisplay('');
+          justEvaluated = false;
+        }
+
+        function appendToExpr(token) {
+          if (justEvaluated && /[0-9.]/.test(token)) {
+            // start new number after evaluation
+            expr = '';
+            justEvaluated = false;
+          } else if (justEvaluated && /[+\-*/]/.test(token)) {
+            // continue with result
+            justEvaluated = false;
+          }
+          expr += token;
+          setSubDisplay(expr);
+          setDisplay(expr);
+        }
+
+        function deleteLast() {
+          if (justEvaluated) {
+            resetAll();
+            return;
+          }
+          expr = expr.slice(0, -1);
+          setSubDisplay(expr);
+          setDisplay(expr || '0');
+        }
+
+        function toggleSign() {
+          // Find last number in expression and flip sign
+          const match = expr.match(/([+\-*/]?)(\d*\.?\d+)$/);
+          if (!match) return;
+          const [full, op, num] = match;
+          const start = expr.slice(0, -full.length);
+          if (op === '-') {
+            // remove the minus sign
+            expr = start + (op ? '+' : '') + num;
+            // clean leading '+'
+            expr = expr.replace(/\+\-/, '-').replace(/^\+/, '');
+          } else if (op === '+') {
+            expr = start + '-' + num;
+          } else if (op === '' || /[+\-*/]/.test(op)) {
+            // either first number or preceded by operator
+            if (op === '') {
+              expr = '-' + num;
+            } else {
+              expr = start + op + '-' + num;
+            }
+          }
+          expr = expr.replace(/^\+/, '');
+          setSubDisplay(expr);
+          setDisplay(expr);
+        }
+
+        function applyPercent() {
+          // convert last number to percent (num / 100)
+          const match = expr.match(/([+\-*/]?)(\d*\.?\d+)$/);
+          if (!match) return;
+          const [full, op, num] = match;
+          const pct = String(parseFloat(num) / 100);
+          expr = expr.slice(0, -full.length) + (op || '') + pct;
+          setSubDisplay(expr);
+          setDisplay(expr);
+        }
+
+        function safeEvaluate(expression) {
+          // Replace × and ÷ if present
+          expression = expression.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+          // Disallow unsafe characters
+          if (!/^[0-9+\-*/().\s]+$/.test(expression)) {
+            throw new Error('Invalid characters');
+          }
+          // Prevent expressions with consecutive operators like '**' or '//' except unary minus
+          if (/[\*\/]{2,}|--+|\+\+|-\+|\+-/.test(expression)) {
+            // some combos are okay (like 2*-3) so we only block clearly invalid repeats
+            // but allow negative numbers after operator
+            // We'll try evaluating in try/catch anyway.
+          }
+          // Evaluate using Function to avoid direct eval (slightly safer)
+          // Ensure final result is finite number
+          const result = Function('"use strict"; return (' + expression + ')')();
+          if (typeof result !== 'number' || !isFinite(result)) throw new Error('Invalid calculation');
+          return result;
+        }
+
+        function evaluateExpression() {
+          if (!expr) return;
+          try {
+            const result = safeEvaluate(expr);
+            setDisplay(String(result));
+            setSubDisplay(expr + ' =');
+            expr = String(result);
+            justEvaluated = true;
+          } catch (e) {
+            setDisplay('Error');
+            setSubDisplay(e.message || 'Invalid expression');
+            expr = '';
+            justEvaluated = false;
+          }
+        }
+
+        // Button handlers
+        buttons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const val = btn.getAttribute('data-value');
+            const action = btn.getAttribute('data-action');
+
+            if (action === 'clear') {
+              resetAll();
+              return;
+            }
+            if (action === 'equals') {
+              evaluateExpression();
+              return;
+            }
+            if (action === 'neg') {
+              toggleSign();
+              return;
+            }
+            if (action === 'percent') {
+              applyPercent();
+              return;
+            }
+            // value buttons (digits, operators, dot)
+            if (val) {
+              // Prevent two operators in a row (except minus as unary)
+              if (/[+\-*/]/.test(val)) {
+                // if expression empty and operator is not '-' ignore
+                if (!expr && val !== '-') return;
+                // don't allow two same operators in a row
+                if (/[+\-*/]$/.test(expr)) {
+                  // replace last operator with new one
+                  expr = expr.slice(0, -1) + val;
+                  setSubDisplay(expr);
+                  setDisplay(expr);
+                  return;
+                }
+              }
+              // prevent multiple decimals in the same number
+              if (val === '.') {
+                const parts = expr.split(/[+\-*/]/);
+                const last = parts[parts.length - 1];
+                if (last.includes('.')) return;
+                if (last === '') val = '0.';
+              }
+              appendToExpr(val);
+            }
+          });
+        });
+
+        // Keyboard support
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            evaluateExpression();
+            return;
+          }
+          if (e.key === 'Backspace') {
+            e.preventDefault();
+            deleteLast();
+            return;
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            resetAll();
+            return;
+          }
+          // Map common keys
+          const allowed = '0123456789.+-*/()';
+          if (allowed.includes(e.key)) {
+            e.preventDefault();
+            appendToExpr(e.key);
+            return;
+          }
+          // percent with Shift+5 or '%' key
+          if (e.key === '%') {
+            e.preventDefault();
+            applyPercent();
+          }
+        });
+
+        // Initialize
+        resetAll();
+
+        // PWA: beforeinstallprompt handling
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          // You could show a custom install button; for simplicity, prompt once after a short delay
+          setTimeout(() => {
+            if (deferredPrompt) {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then((choiceResult) => {
+                deferredPrompt = null;
+              });
+            }
+          }, 1000);
+        });
+
+        // Register a service worker if available
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('Service worker registered.', reg);
+          }).catch(err => {
+            // No SW available or registration failed; ignore gracefully
+            console.log('Service worker registration failed:', err);
+          });
+        }
+      })();
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>
